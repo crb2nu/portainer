@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  ollama-dolphin:
+    image: ollama/ollama:${OLLAMA_VERSION}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: always
+    environment:
+      - MODEL_NAME=${MODEL_NAME}
+    command: >
+      /bin/sh -c "while ! /bin/ollama ps > /dev/null 2>&1; do sleep 5; done &&
+                  echo \"$MODEL_NAME\" | xargs -n1 /bin/ollama pull"
+    ports:
+      - 11434:11434
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          devices:
+            - capabilities: [gpu]
+
+volumes:
+  ollama-data:
