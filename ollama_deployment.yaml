@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-{{ .Values.OLLAMA_MODEL }}
+  namespace: ai-applications
+  labels:
+    app: ollama
+    app.kubernetes.io/name: ollama-{{ .Values.OLLAMA_MODEL }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:0.3.13-rocm
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 11434
+          name: http
+        resources:
+          limits:
+            amd.com/gpu: "1"
+        env:
+        - name: OLLAMA_MODEL
+          value: "{{ .Values.OLLAMA_MODEL }}"
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                while ! /bin/ollama ps > /dev/null 2>&1; do
+                  sleep 5
+                done
+                echo "$OLLAMA_MODEL" | xargs -n1 /bin/ollama pull
+        volumeMounts:
+        - mountPath: /root/.ollama
+          name: ollama-data
+      volumes:
+      - name: ollama-data
+        persistentVolumeClaim:
+          claimName: ollama-{{ .Values.OLLAMA_MODEL }}-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-{{ .Values.OLLAMA_MODEL }}-pvc
+  namespace: ai-applications
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-{{ .Values.OLLAMA_MODEL }}
+  namespace: ai-applications
+spec:
+  selector:
+    app: ollama
+  ports:
+  - protocol: TCP
+    port: 11434
+    targetPort: 11434
