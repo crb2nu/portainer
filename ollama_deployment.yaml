@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ollama-{{ .Values.OLLAMA_MODEL }}
+  name: ollama-{{OLLAMA_MODEL}}
   namespace: ai-applications
   labels:
     app: ollama
-    app.kubernetes.io/name: ollama-{{ .Values.OLLAMA_MODEL }}
+    app.kubernetes.io/name: ollama-{{OLLAMA_MODEL}}
 spec:
   replicas: 1
   selector:
@@ -28,7 +28,7 @@ spec:
             amd.com/gpu: "1"
         env:
         - name: OLLAMA_MODEL
-          value: "{{ .Values.OLLAMA_MODEL }}"
+          value: "{{OLLAMA_MODEL}}"
         lifecycle:
           postStart:
             exec:
@@ -46,12 +46,12 @@ spec:
       volumes:
       - name: ollama-data
         persistentVolumeClaim:
-          claimName: ollama-{{ .Values.OLLAMA_MODEL }}-pvc
+          claimName: ollama-{{OLLAMA_MODEL}}-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ollama-{{ .Values.OLLAMA_MODEL }}-pvc
+  name: ollama-{{OLLAMA_MODEL}}-pvc
   namespace: ai-applications
 spec:
   accessModes:
@@ -63,7 +63,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ollama-{{ .Values.OLLAMA_MODEL }}
+  name: ollama-{{OLLAMA_MODEL}}
   namespace: ai-applications
 spec:
   selector:
